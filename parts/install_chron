@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -e 
+
+if [[ $EUID -ne 1000 ]]; then
+    printf "%s\n" "This script must be run as root.."
+    exit 1
+fi
+
+#----------------------------------------------------------------------#
+
+Help(){
+	cat << 'EOF'
+Install predefined chrontables for any user. Without given user the
+default is UID 1000.
+
+-h | --help			show this help
+-u [USERID]			userid to install crontables
+-n [USERNAME]			username to install crontables
+EOF
+}
+
+ParseCommandLineOptions(){
+	local cli_options=("$@")
+	options=$(getopt -o hu:n: --long help -- "${cli_options[@]}")
+	eval set -- "$options"
+	while true; do
+		case "$1" in
+			-h|--help) Help; exit 0;;
+			-u) P_uid="$2"; shift 2;;
+			-n) P_uname="$2"; shift 2;;
+			--) break;;
+			*) shift;;
+		esac
+	done
+}
+
+
+AddCron(){
+	local -a cron=("$@")
+	printf "%s\n" "${cron[@]}" >> "$TMPF"
+}
+
+
+#----------------------------------------------------------------------#
+ParseCommandLineOptions "$@"
+
+TMPF="$( mktemp )"
+cleanup(){ rm "$TMPF"; }
+trap 'cleanup' EXIT INT TERM HUP
+
+if [[ "$P_uname" =~ ^[a-zA-Z\ ]+$ ]]; then
+	username="$P_uname"
+else 
+	userid="${P_uid:-1000}"
+	username="$( grep "$userid" /etc/passwd  )"
+	username="${username%%:*}"
+fi
+
+
+#save current crontab
+crontab -u "$username" -l > "$TMPF"
+
+#add new crons to saved crontab
+AddCron "@reboot chron_clamdscan"
+
+#dirman Desktop =>
+Addcron "@reboot chron_clamdscan"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DESKTOP )\" -a move -t image/* -o 3 -d \"$( xdg-user-dir PICTURES )\" --date-dir"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DESKTOP )\" -a move -t audio/* -o 3 -d \"$( xdg-user-dir MUSIC )\" --date-dir"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DESKTOP )\" -a move -t video/* -o 3 -d \"$( xdg-user-dir VIDEOS )\"--date-dir"
+
+AddCron "@reboot dirman -s \"$( xdg-user-dir DESKTOP )\" -a move -t application/vnd.oasis.opendocument.tex -o 3 -d \"$( xdg-user-dir DOCUMENTS )\"--date-dir"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DESKTOP )\" -a move -t application/pdf -o 3 -d \"$( xdg-user-dir DOCUMENTS )\"--date-dir"
+
+#dirman Downloads =>
+AddCron "@reboot dirman -s \"$( xdg-user-dir DOWNLOADS )\" -a move -t image/* -o 3 -d \"$( xdg-user-dir PICTURES )\" --date-dir"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DOWNLOADS )\" -a move -t audio/* -o 3 -d \"$( xdg-user-dir MUSIC )\" --date-dir"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DOWNLOADS )\" -a move -t video/* -o 3 -d \"$( xdg-user-dir VIDEOS )\" --date-dir"
+
+AddCron "@reboot dirman -s \"$( xdg-user-dir DOWNLOADS )\" -a move -t application/vnd.oasis.opendocument.tex -o 3 -d \"$( xdg-user-dir DOCUMENTS )\"--date-dir"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DOWNLOADS )\" -a move -t application/pdf -o 3 -d \"$( xdg-user-dir DOCUMENTS )\"--date-dir"
+
+#dirman Documents =>
+AddCron "@reboot dirman -s \"$( xdg-user-dir DOCUMENTS )\" -a move -t image/* -o 3 -d \"$( xdg-user-dir PICTURES )\" --date-dir"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DOCUMENTS )\" -a move -t audio/* -o 3 -d \"$( xdg-user-dir MUSIC )\" --date-dir"
+AddCron "@reboot dirman -s \"$( xdg-user-dir DOCUMENTS )\" -a move -t video/* -o 3 -d \"$( xdg-user-dir VIDEOS )\" --date-dir"
+
+#set crontab for user
+crontab -u "$username" "$TMPF" || exit 1
+
+printf "%s\n" "Crontabs created" 

@@ -1,0 +1,527 @@
+#!/usr/bin/env bash
+
+set -u
+set -o pipefail
+
+PROGRAM_NAME="dirman"
+VERSION="0.2.1"
+
+SRC=""
+DST=""
+ACTION=""
+TYPE_INPUT=""
+OLDER_THAN=""
+DATE_DIR=0
+VERBOSE=0
+DRY_RUN=0
+RECURSIVE=0
+RESOLVED_MIME=""
+MIME_MATCH_MODE="exact"
+ERROR_COUNT=0
+SRC_REAL=""
+TARGET_REAL=""
+
+usage() {
+  cat <<'USAGE'
+dirman - MIME-aware directory maintenance tool
+
+Usage:
+  dirman.sh --src PATH --action ACTION --type EXT_OR_MIME_PATTERN --older-than DAYS [options]
+
+Required:
+  -s, --src PATH              Source directory to scan.
+  -a, --action ACTION         File action: move, copy, or delete.
+  -t, --type TYPE             Extension, MIME type, or main MIME pattern.
+                              Examples: pdf, application/pdf, image/*
+  -o, --older-than DAYS       Only act on files older than DAYS days.
+
+Required for move/copy:
+  -d, --dst PATH              Destination directory.
+
+Options:
+      --date-dir              Create/use today's YYYY-MM-DD directory under dst.
+      --recursive             Scan source subdirectories as well.
+      --dry-run               Show/log intended actions without changing files.
+  -v, --verbose               Print informational messages to stdout.
+  -h, --help                  Show this help page.
+      --version               Show version.
+
+Examples:
+  dirman.sh -s "$HOME/Desktop" -d "$HOME/Documents/PDF" -a move -t pdf -o 7 --date-dir
+  dirman.sh --src /tmp/inbox --dst /tmp/archive --action copy --type image/jpeg --older-than 30
+  dirman.sh --src /tmp/inbox --dst /tmp/images --action move --type 'image/*' --older-than 7
+  dirman.sh --src /tmp/inbox --action delete --type txt --older-than 14 --dry-run
+
+Cron example:
+  15 * * * * /path/to/dirman.sh -s "$HOME/Desktop" -d "$HOME/archive" -a move -t pdf -o 3 --date-dir
+USAGE
+}
+
+log_msg() {
+  local level="$1"
+  local message="$2"
+  local logger_priority="user.notice"
+
+  case "$level" in
+    DEBUG) logger_priority="user.debug" ;;
+    INFO) logger_priority="user.info" ;;
+    ERROR) logger_priority="user.err" ;;
+  esac
+
+  logger -t "$PROGRAM_NAME" -p "$logger_priority" -- "$message" 2>/dev/null || true
+
+  if [[ "$VERBOSE" -eq 1 || "$level" == "ERROR" ]]; then
+    printf '%s: %s\n' "$level" "$message"
+  fi
+}
+
+notify_error() {
+  local message="$1"
+
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send -u critical -t 0 -a "$PROGRAM_NAME" "$PROGRAM_NAME error" "$message" 2>/dev/null || true
+  fi
+}
+
+fail() {
+  local message="$1"
+  log_msg "ERROR" "$message"
+  notify_error "$message"
+  exit 1
+}
+
+require_command() {
+  local command_name="$1"
+  command -v "$command_name" >/dev/null 2>&1 || fail "Required command not found: $command_name"
+}
+
+parse_args() {
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      -s|--src)
+        [[ "$#" -ge 2 ]] || fail "$1 requires a path"
+        SRC="$2"
+        shift 2
+        ;;
+      -d|--dst)
+        [[ "$#" -ge 2 ]] || fail "$1 requires a path"
+        DST="$2"
+        shift 2
+        ;;
+      -a|--action)
+        [[ "$#" -ge 2 ]] || fail "$1 requires an action"
+        ACTION="$2"
+        shift 2
+        ;;
+      -t|--type)
+        [[ "$#" -ge 2 ]] || fail "$1 requires an extension or MIME type"
+        TYPE_INPUT="$2"
+        shift 2
+        ;;
+      -o|--older-than)
+        [[ "$#" -ge 2 ]] || fail "$1 requires a number of days"
+        OLDER_THAN="$2"
+        shift 2
+        ;;
+      --date-dir)
+        DATE_DIR=1
+        shift
+        ;;
+      --recursive)
+        RECURSIVE=1
+        shift
+        ;;
+      --dry-run)
+        DRY_RUN=1
+        shift
+        ;;
+      -v|--verbose)
+        VERBOSE=1
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      --version)
+        printf '%s %s\n' "$PROGRAM_NAME" "$VERSION"
+        exit 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        fail "Unknown option: $1"
+        ;;
+      *)
+        fail "Unexpected argument: $1"
+        ;;
+    esac
+  done
+}
+
+validate_args() {
+  [[ -n "$SRC" ]] || fail "Missing required parameter: --src"
+  [[ -n "$ACTION" ]] || fail "Missing required parameter: --action"
+  [[ -n "$TYPE_INPUT" ]] || fail "Missing required parameter: --type"
+  [[ -n "$OLDER_THAN" ]] || fail "Missing required parameter: --older-than"
+
+  [[ -d "$SRC" ]] || fail "Source directory does not exist or is not a directory: $SRC"
+  [[ "$OLDER_THAN" =~ ^[0-9]+$ ]] || fail "--older-than must be a non-negative integer"
+
+  case "$ACTION" in
+    move|copy)
+      [[ -n "$DST" ]] || fail "--dst is required for action: $ACTION"
+      ;;
+    delete)
+      ;;
+    *)
+      fail "Unsupported action: $ACTION"
+      ;;
+  esac
+
+  if [[ -n "$DST" && "$ACTION" != "delete" ]]; then
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      mkdir -p -- "$DST" || fail "Could not create destination directory: $DST"
+    fi
+  fi
+
+  SRC_REAL="$(realpath -m -- "$SRC")" || fail "Could not resolve source path: $SRC"
+  if [[ -n "$DST" && "$ACTION" != "delete" ]]; then
+    TARGET_REAL="$(realpath -m -- "$(target_directory)")" || fail "Could not resolve target path: $(target_directory)"
+    if [[ "$DATE_DIR" -eq 0 && "$TARGET_REAL" == "$SRC_REAL" ]]; then
+      fail "Refusing to $ACTION files into the same directory without --date-dir: $SRC"
+    fi
+  fi
+}
+
+normalize_extension() {
+  local value="$1"
+  value="${value#.}"
+  printf '%s' "$value" | tr '[:upper:]' '[:lower:]'
+}
+
+resolve_mime_type() {
+  local input=""
+  local ext=""
+  local candidate=""
+
+  input="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+
+  if [[ "$input" =~ ^[[:alnum:].+-]+/\*$ ]]; then
+    MIME_MATCH_MODE="main"
+    RESOLVED_MIME="${input%/*}/*"
+    return 0
+  fi
+
+  if [[ "$input" == */* ]]; then
+    if [[ "$input" == *"*"* ]]; then
+      fail "Unsupported MIME pattern: $input. Only main MIME patterns like image/* are supported."
+    fi
+    MIME_MATCH_MODE="exact"
+    RESOLVED_MIME="$input"
+    return 0
+  fi
+
+  ext="$(normalize_extension "$input")"
+  [[ -n "$ext" ]] || fail "Empty file type is not valid"
+
+  if command -v xdg-mime >/dev/null 2>&1; then
+    candidate="$(xdg-mime query filetype "probe.$ext" 2>/dev/null || true)"
+    if [[ "$candidate" == */* && "$candidate" != "application/octet-stream" ]]; then
+      MIME_MATCH_MODE="exact"
+      RESOLVED_MIME="$candidate"
+      return 0
+    fi
+  fi
+
+  case "$ext" in
+    # Archives and disk images
+    7z) RESOLVED_MIME="application/x-7z-compressed" ;;
+    bz|bz2|tbz|tbz2) RESOLVED_MIME="application/x-bzip2" ;;
+    cab) RESOLVED_MIME="application/vnd.ms-cab-compressed" ;;
+    deb) RESOLVED_MIME="application/vnd.debian.binary-package" ;;
+    gz|tgz) RESOLVED_MIME="application/gzip" ;;
+    iso) RESOLVED_MIME="application/x-iso9660-image" ;;
+    rar) RESOLVED_MIME="application/vnd.rar" ;;
+    rpm) RESOLVED_MIME="application/x-rpm" ;;
+    tar) RESOLVED_MIME="application/x-tar" ;;
+    txz|xz) RESOLVED_MIME="application/x-xz" ;;
+    zip) RESOLVED_MIME="application/zip" ;;
+    zst) RESOLVED_MIME="application/zstd" ;;
+
+    # Audio
+    aac) RESOLVED_MIME="audio/x-hx-aac-adts" ;;
+    aif|aiff) RESOLVED_MIME="audio/x-aiff" ;;
+    amr) RESOLVED_MIME="audio/AMR" ;;
+    au|snd) RESOLVED_MIME="audio/basic" ;;
+    flac) RESOLVED_MIME="audio/flac" ;;
+    m4a|m4b) RESOLVED_MIME="audio/x-m4a" ;;
+    mid|midi) RESOLVED_MIME="audio/midi" ;;
+    mka) RESOLVED_MIME="video/x-matroska" ;;
+    mp2|mp3) RESOLVED_MIME="audio/mpeg" ;;
+    
+    oga|ogg|opus) RESOLVED_MIME="audio/ogg" ;;
+    ra) RESOLVED_MIME="audio/vnd.rn-realaudio" ;;
+    wav) RESOLVED_MIME="audio/x-wav" ;;
+    
+    weba) RESOLVED_MIME="video/webm" ;;
+    
+    # Video
+    3g2) RESOLVED_MIME="video/3gpp2" ;;
+    3gp) RESOLVED_MIME="video/3gpp" ;;
+    asf|wma) RESOLVED_MIME="video/x-ms-asf" ;;
+    avi) RESOLVED_MIME="video/x-msvideo" ;;
+    flv) RESOLVED_MIME="video/x-flv" ;;
+    m4v|mp4) RESOLVED_MIME="video/mp4" ;;
+    mkv) RESOLVED_MIME="video/x-matroska" ;;
+    mov) RESOLVED_MIME="video/quicktime" ;;
+    mpeg|mpg) RESOLVED_MIME="video/mpeg" ;;
+    ogv) RESOLVED_MIME="video/ogg" ;;
+    ts) RESOLVED_MIME="video/mp2t" ;;
+    webm) RESOLVED_MIME="video/webm" ;;
+    wmv) RESOLVED_MIME="video/x-ms-wmv" ;;
+
+    # Images
+    avif) RESOLVED_MIME="image/avif" ;;
+    bmp) RESOLVED_MIME="image/bmp" ;;
+    gif) RESOLVED_MIME="image/gif" ;;
+    htm|html) RESOLVED_MIME="text/html" ;;
+    heic) RESOLVED_MIME="image/heic" ;;
+    heif) RESOLVED_MIME="image/heif" ;;
+    ico) RESOLVED_MIME="image/vnd.microsoft.icon" ;;
+    j2k) RESOLVED_MIME="image/x-jp2-codestream" ;;
+    jp2) RESOLVED_MIME="image/jp2" ;;
+    jxl) RESOLVED_MIME="image/jxl" ;;
+    jpeg|jpg) RESOLVED_MIME="image/jpeg" ;;
+    json) RESOLVED_MIME="application/json" ;;
+    jsonld) RESOLVED_MIME="application/ld+json" ;;
+    md) RESOLVED_MIME="text/markdown" ;;
+    png) RESOLVED_MIME="image/png" ;;
+    svg) RESOLVED_MIME="image/svg+xml" ;;
+    tif|tiff) RESOLVED_MIME="image/tiff" ;;
+    webp) RESOLVED_MIME="image/webp" ;;
+
+    # Documents and structured data
+    csv) RESOLVED_MIME="text/csv" ;;
+    doc) RESOLVED_MIME="application/msword" ;;
+    docx) RESOLVED_MIME="application/vnd.openxmlformats-officedocument.wordprocessingml.document" ;;
+    epub) RESOLVED_MIME="application/epub+zip" ;;
+    ics) RESOLVED_MIME="text/calendar" ;;
+    mobi) RESOLVED_MIME="application/x-mobipocket-ebook" ;;
+    odg) RESOLVED_MIME="application/vnd.oasis.opendocument.graphics" ;;
+    odp) RESOLVED_MIME="application/vnd.oasis.opendocument.presentation" ;;
+    ods) RESOLVED_MIME="application/vnd.oasis.opendocument.spreadsheet" ;;
+    odt) RESOLVED_MIME="application/vnd.oasis.opendocument.text" ;;
+    pdf) RESOLVED_MIME="application/pdf" ;;
+    ppt) RESOLVED_MIME="application/vnd.ms-powerpoint" ;;
+    pptx) RESOLVED_MIME="application/vnd.openxmlformats-officedocument.presentationml.presentation" ;;
+    ps) RESOLVED_MIME="application/postscript" ;;
+    rtf) RESOLVED_MIME="application/rtf" ;;
+    tex) RESOLVED_MIME="application/x-tex" ;;
+    toml) RESOLVED_MIME="application/toml" ;;
+    tsv) RESOLVED_MIME="text/tab-separated-values" ;;
+    txt|log) RESOLVED_MIME="text/plain" ;;
+    vcf) RESOLVED_MIME="text/vcard" ;;
+    xhtml) RESOLVED_MIME="application/xhtml+xml" ;;
+    xls) RESOLVED_MIME="application/vnd.ms-excel" ;;
+    xlsx) RESOLVED_MIME="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ;;
+    xml) RESOLVED_MIME="application/xml" ;;
+    yaml|yml) RESOLVED_MIME="application/yaml" ;;
+
+    # Fonts and executable data
+    eot) RESOLVED_MIME="application/vnd.ms-fontobject" ;;
+    otf) RESOLVED_MIME="font/otf" ;;
+    sqlite|sqlite3) RESOLVED_MIME="application/vnd.sqlite3" ;;
+    ttf) RESOLVED_MIME="font/ttf" ;;
+    wasm) RESOLVED_MIME="application/wasm" ;;
+    woff) RESOLVED_MIME="font/woff" ;;
+    woff2) RESOLVED_MIME="font/woff2" ;;
+    *)
+      fail "Could not resolve extension to MIME type: $input. Pass an explicit MIME type instead."
+      ;;
+  esac
+
+  MIME_MATCH_MODE="exact"
+}
+
+mime_matches() {
+  local actual_mime="$1"
+  local main_type=""
+
+  case "$MIME_MATCH_MODE" in
+    exact)
+      [[ "$actual_mime" == "$RESOLVED_MIME" ]]
+      ;;
+    main)
+      main_type="${RESOLVED_MIME%/*}"
+      [[ "$actual_mime" == "$main_type/"* ]]
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+target_directory() {
+  if [[ "$DATE_DIR" -eq 1 ]]; then
+    printf '%s/%s' "$DST" "$(date +%F)"
+  else
+    printf '%s' "$DST"
+  fi
+}
+
+unique_target_path() {
+  local directory="$1"
+  local source_path="$2"
+  local basename_value=""
+  local stem=""
+  local extension=""
+  local candidate=""
+  local counter=1
+  local timestamp=""
+
+  basename_value="$(basename -- "$source_path")"
+  candidate="$directory/$basename_value"
+
+  if [[ ! -e "$candidate" ]]; then
+    printf '%s' "$candidate"
+    return 0
+  fi
+
+  timestamp="$(date +%Y%m%d_%H%M%S)"
+  if [[ "$basename_value" == *.* && "$basename_value" != .* ]]; then
+    stem="${basename_value%.*}"
+    extension=".${basename_value##*.}"
+  else
+    stem="$basename_value"
+    extension=""
+  fi
+
+  while :; do
+    candidate="$directory/${stem}_${timestamp}_${counter}${extension}"
+    if [[ ! -e "$candidate" ]]; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+    counter=$((counter + 1))
+  done
+}
+
+is_older_than_days() {
+  local path="$1"
+  local days="$2"
+  local cutoff=""
+  local modified=""
+
+  cutoff="$(date -d "$days days ago" +%s)" || return 1
+  modified="$(stat -c %Y -- "$path")" || return 1
+
+  [[ "$modified" -lt "$cutoff" ]]
+}
+
+perform_action() {
+  local path="$1"
+  local destination_dir=""
+  local destination_path=""
+
+  case "$ACTION" in
+    delete)
+      if [[ "$DRY_RUN" -eq 1 ]]; then
+        log_msg "INFO" "DRY-RUN delete: $path"
+      else
+        rm -- "$path" || return 1
+        log_msg "INFO" "Deleted $path"
+      fi
+      ;;
+    copy)
+      destination_dir="$(target_directory)"
+      destination_path="$(unique_target_path "$destination_dir" "$path")"
+      if [[ "$DRY_RUN" -eq 1 ]]; then
+        log_msg "INFO" "DRY-RUN copy: $path -> $destination_path"
+      else
+        mkdir -p -- "$destination_dir" || return 1
+        cp -p -- "$path" "$destination_path" || return 1
+        log_msg "INFO" "Copied $path -> $destination_path"
+      fi
+      ;;
+    move)
+      destination_dir="$(target_directory)"
+      destination_path="$(unique_target_path "$destination_dir" "$path")"
+      if [[ "$DRY_RUN" -eq 1 ]]; then
+        log_msg "INFO" "DRY-RUN move: $path -> $destination_path"
+      else
+        mkdir -p -- "$destination_dir" || return 1
+        mv -- "$path" "$destination_path" || return 1
+        log_msg "INFO" "Moved $path -> $destination_path"
+      fi
+      ;;
+  esac
+}
+
+scan_and_apply() {
+  local found_mime=0
+  local found_old=0
+  local path=""
+  local actual_mime=""
+  local find_args=()
+
+  find_args=("$SRC_REAL")
+
+  if [[ "$RECURSIVE" -eq 0 ]]; then
+    find_args+=(-maxdepth 1)
+  fi
+
+  if [[ "$ACTION" != "delete" && -n "$TARGET_REAL" && "$TARGET_REAL" == "$SRC_REAL"/* ]]; then
+    find_args+=(-path "$TARGET_REAL" -prune -o -type f -print0)
+    log_msg "DEBUG" "Target directory is inside source; excluding target from scan: $TARGET_REAL"
+  else
+    find_args+=(-type f -print0)
+  fi
+
+  while IFS= read -r -d '' path; do
+    actual_mime="$(file --brief --mime-type -- "$path" 2>/dev/null || true)"
+    if ! mime_matches "$actual_mime"; then
+      continue
+    fi
+
+    found_mime=1
+
+    if ! is_older_than_days "$path" "$OLDER_THAN"; then
+      continue
+    fi
+
+    found_old=1
+    if ! perform_action "$path"; then
+      ERROR_COUNT=$((ERROR_COUNT + 1))
+      log_msg "ERROR" "Action failed for file: $path"
+      notify_error "Action failed for file: $path"
+    fi
+  done < <(find "${find_args[@]}")
+
+  if [[ "$found_mime" -eq 0 ]]; then
+    log_msg "DEBUG" "No action: no $RESOLVED_MIME files found in $SRC"
+  elif [[ "$found_old" -eq 0 ]]; then
+    log_msg "INFO" "No $RESOLVED_MIME files older than $OLDER_THAN day(s) found in $SRC"
+  fi
+
+  if [[ "$ERROR_COUNT" -gt 0 ]]; then
+    fail "$ERROR_COUNT file operation(s) failed"
+  fi
+}
+
+main() {
+  parse_args "$@"
+  require_command find
+  require_command file
+  require_command stat
+  require_command date
+  require_command realpath
+  validate_args
+  resolve_mime_type "$TYPE_INPUT"
+  log_msg "DEBUG" "Resolved type '$TYPE_INPUT' to MIME matcher '$RESOLVED_MIME' ($MIME_MATCH_MODE)"
+  scan_and_apply
+}
+
+main "$@"

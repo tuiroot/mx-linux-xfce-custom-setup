@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+if [[ $EUID -ne 0 ]]; then
+    printf "%s\n" "This script must be run as root.."
+    exit 1
+fi
+
+
+#--------------- ProtonVpn --------------------------------------------#
+
+wget https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.8_all.deb
+dpkg -i ./protonvpn-stable-release_1.0.8_all.deb && nala update
+nala install proton-vpn-gnome-desktop
+
+#----------------------------------------------------------------------#
+
+#--------------- LibreWolf --------------------------------------------#
+if command -v nala; then
+	nala update && nala install extrepo -y
+	extrepo enable librewolf && extrepo update librewolf
+	nala update && nala install librewolf -y
+elif command -v apt; then
+	apt update && nala install extrepo -y
+	extrepo enable librewolf && extrepo update librewolf
+	apt update && nala install librewolf -y
+else
+	exit 1
+fi
+
+#----------------------------------------------------------------------#
+
+
+	
+printf "%s\n" "Installation from external repros completed"
+

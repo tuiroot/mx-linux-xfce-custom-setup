@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+SCAN_PROB="33"
+
+RandomPercent(){
+		printf  "%s\n" "$(( RANDOM % 100 + 1 ))"
+	}
+
+RandomConf(){
+	local config
+	
+	if (( $( RandomPercent ) <= 50 )); then
+		config="/etc/clamav/clamd-largefiles.conf"
+	else
+		config="/etc/clamav/clamd-deepscan.conf"
+	fi
+	
+	printf "%s\n" "$config"
+}
+
+#----------------------------------------------------------------------#
+
+r=$( RandomPercent )
+
+if (( r <= "$SCAN_PROB" )); then
+	clamdscan --multiscan --fdpass --config-file="$( RandomConf )" "$( xdg-user-dir HOME )"
+fi

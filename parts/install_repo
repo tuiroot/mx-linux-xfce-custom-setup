@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+if [[ $EUID -ne 0 ]]; then
+    printf "%s\n" "This script must be run as root.."
+    exit 1
+fi
+
+
+repro=(
+"clamav"						#security
+"clamav-daemon"					#security
+"clamav-freshclam"				#security
+"clamdscan"						#security
+"clamfs"						#security
+"debsums"						#security
+"extrepo"
+"ffmpeg"						#media
+"glow"
+"hunspell-de-de"				#office
+"keepassxc"						#security
+"libosinfo-bin"					#virt
+"libreoffice-l10n-de"			#office
+"libvirt-daemon-system"			#virt
+"mat2"							#media
+"mythes-de"						#office
+"needrestart"					#security
+"nethogs"						#network/security
+"net-tools"						#network
+"nheko"							#com
+"osinfo-db-tools"				#virt
+"ovmf"							#virt
+"qemu-system"					#virt
+"qemu-system-gui" 				#virt
+"qemu-system-modules-spice" 	#virt
+"qemu-utils"					#virt
+"quickjs"    					#dependency yt-dlp
+"swtpm"							#virt
+"spice-client-gtk"				#virt
+"shellcheck"					#development
+"virt-manager"					#virt
+"virt-viewer"					#virt
+"virtinst"						#virt
+"gir1.2-spiceclientgtk-3.0 "	#virt
+"yt-dlp"						#media
+)
+
+if command -v nala > /dev/null; then
+	nala install "${repro[@]}" || exit 1
+elif command -v apt > /dev/null; then
+	apt install "${repro[@]}" || exit 1
+else
+	exit 1
+fi
+
+
+printf "%s\n" "Installation from repro completed"
+
+

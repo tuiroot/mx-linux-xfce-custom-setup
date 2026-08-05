@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+thunar "$( xdg-user-dir VIDEOS )"

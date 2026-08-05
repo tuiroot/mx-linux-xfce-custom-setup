@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+if [[ $EUID -ne 0 ]]; then
+    printf "%s\n" "This script must be run as root.."
+    exit 1
+fi
+
+
+CheckScript(){
+	local script="$1"
+	local userinput
+	
+	if  bash -n "$script" > /dev/null; then
+		AskUserToInstallGarbage "script"
+	elif shellcheck "$script" > /dev/null; then
+		AskUserToInstallGarbage "$script"
+	fi
+}
+
+AskUserToInstallGarbage(){
+	local script="$1"
+	cat << 'EOF'
+	####################################################################
+	Script check for $script failed.
+	Enter: "I DONT CARE" -- to install garbage --
+	####################################################################
+
+EOF
+
+	read -rp ">>>" userinput
+	[[ "$userinput" == "I DONT CARE" ]] && return 0
+	return 1
+}
+	
+#----------------------------------------------------------------------#
+
+
+mapfile -t scripts < <( find ./scripts/ -mindepth 1 -maxdepth 1 )
+
+for element in "${scripts[@]}"; do
+	CheckScript "$element" || continue
+	
+	filename="$( basename "$element")"
+	install -o root -g users -m 750 "$element" "/usr/local/bin/$filename" || exit 1
+
+done 
+
+printf "%s\n" "User scripts copied to /usr/local/bin"
+

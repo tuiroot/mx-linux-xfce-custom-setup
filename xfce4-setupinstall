@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+VERSION="Version: 2026-08-03"
+
+if [[ $EUID -ne 1000 ]]; then
+    printf "%s\n" "This script must be run as root.."
+    exit 1
+fi
+
+#----------------------------------------------------------------------#
+
+ErrorCounter(){
+	local opt="$1"
+	case "$opt" in
+		p) printf "%s\n" "$count_err" ;;
+		c) count_err="$(( count_err + 1 ))" ;;
+		*) count_err="$(( count_err + 1 ))" ;;
+	esac
+}
+
+OutErr(){
+	local text=("$@")
+	local red="\033[38;5;160m"
+	local nc='\033[0m'
+
+	printf "%b\n" "${red}${text[*]}$nc" >&2
+	}
+	
+	
+#installs from Mx-Repo
+install_repo(){
+	if true; then #! bash ./parts/install_repo; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} exit with error"
+	fi
+}
+
+	
+#installs from external repos
+install_extrepo(){
+	if ! bash ./parts/install_extrepo; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+	fi
+}
+
+#install admin scripts to /usr/local/bin
+install_admin_scripts(){
+	if ! bash ./parts/install_scripts_root; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+	fi
+}
+
+#install user scripts to /usr/local/bin
+install_user_scripts(){
+	if ! bash ./parts/install_scripts_user; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+	fi
+}
+
+#install config files to /etc/
+install_config(){
+if ! bash ./parts/install_config; then
+	ErrorCounter "c"
+	OutErr "${FUNCNAME[0]} failed"
+fi
+}
+
+#install root anacrontable to /etc/anachrontable
+install_anachron(){
+	if ! bash ./parts/install_anachron; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+	fi
+}
+
+#user rights
+install_user_rights(){
+	if ! bash ./parts/install_user_rights; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+	fi
+}
+
+
+#install chrons for uid1000
+install_chron(){
+	if ! bash ./parts/install_chron; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+		return 1
+	fi
+}
+
+#install autostart scripts
+install_autostart(){
+	if ! bash ./parts/install_autostart; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+		return 1
+	fi
+}
+
+#create launcher /etc/skel/Desktop
+install_launcher(){
+	if ! bash ./parts/install_launcher; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+		return 1
+	fi
+}
+
+
+#start makemyapp browser app maker
+install_deskwebapps(){
+	if ! bash ./parts/MakeMyApp-0.1.0-beta.1/makemyapp; then
+		ErrorCounter "c"
+		OutErr "${FUNCNAME[0]} failed"
+		return 1
+	fi
+}
+
+#----------------------------------------------------------------------#
+
+printf "%s\n" "MxLinux-Xfce4 custom-setup"
+printf "%s\n\n" "$VERSION"
+
+cat << 'EOF'
+########################################################################
+This script will...
+- install apps from distro repo
+- install apps from external repos like librewolf or protonvpn
+- install bash admin scripts as systemwide command
+- install bash user scripts as systemwide command
+- users right management
+- anachron for root
+- cronjobs for user
+- autostarts for user
+- Preconfigured Desktop for new users /etc/skel
+- init appmaker MakeMyApp
+########################################################################
+
+EOF
+
+read -rp "Press Enter to continue or strg + c to abort"
+
+install_repo
+install_extrepo
+install_admin_scripts &
+install_user_scripts &
+install_config &
+install_anachron &
+install_user_rights &
+install_chron &
+install_autostart &
+install_launcher &
+install_deskwebapps 
+
+printf "\n%s\n" "Done with $( ErrorCounter "p" ) failed parts."

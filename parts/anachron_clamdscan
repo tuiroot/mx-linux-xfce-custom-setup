@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+RandomConf(){
+	local r
+	local config
+	
+	r=$(( RANDOM % 100 ))
+	
+	if (( r <= 50 )); then
+		config="/etc/clamav/clamd-largefiles.conf"
+	else
+		config="/etc/clamav/clamd-deepscan.conf"
+	fi
+	
+	printf "%s\n" "$config"
+}
+
+#----------------------------------------------------------------------#
+
+clamdscan --multiscan --fdpass --config-file="$( RandomConf )" "$( xdg-user-dir HOME )"

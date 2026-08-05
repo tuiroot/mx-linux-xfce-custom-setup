@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+if [[ $EUID -ne 0 ]]; then
+    printf "%s\n" "This script must be run as root.."
+    exit 1
+fi
+
+userid=1000
+username="$( grep "$userid" /etc/passwd  )"
+username="${username%%:*}"
+
+user_astart="/home/$username/.config/autostart"
+[[ -d "$user_astart" ]] || install -d "$user_astart"
+cp ./parts/autostart/* "$user_astart"
+
+skel_astart="/etc/skel/autostart/"
+[[ -d "$skel_astart" ]] || install -d "$skel_astart"
+cp ./parts/autostart/* "$skel_astart"

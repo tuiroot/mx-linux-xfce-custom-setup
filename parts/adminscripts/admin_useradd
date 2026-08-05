@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+#---------------create user--------------------------------------------#
+
+read -rp "User name> " username
+shell="$( command -v bash )"
+[[ -n "$shell" ]] || shell="$(which bash)"
+
+if [[ -z "$shell" ]]; then
+	printf "%s\n" "bash not found"
+	exit 1
+fi 
+
+if ! useradd -m "$username"; then
+	exit 1
+fi
+
+passwd "$username"
+
+admin_userright -n "$username"
+admin_userchron -n "$username"
+
+

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [[ $EUID -ne 0 ]]; then
+    printf "%s\n" "This script must be run as root.."
+    exit 1
+fi
+
+#----------------------------------------------------------------------#
+AddAnachron(){
+	local anacron="$1"
+	printf "%s\n" "$anacron" >> /etc/anacrontab || exit 1
+}
+
+AddAnachron '3 5 clamd-roothome clamdscan --multiscan --fdpass --config-file="/etc/clamav/clamd-largefiles.conf" /root'
+AddAnachron '5 10 clamd-system clamdscan --multiscan --fdpass --config-file="/etc/clamav/clamd-largefiles.conf" --file-list="/etc/clamav/targets_root.txt'
+
+
+printf "%s\n" "Anacrons created: clamdscan"
+
+

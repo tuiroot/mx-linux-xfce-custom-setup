@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e 
+
+if [[ $EUID -ne 0 ]]; then
+    printf "%s\n" "This script must be run as root.."
+    exit 1
+fi
+
+install -o root -g clamav -m 640 ./conf/clamd-largefiles.conf /etc/clamav/clamd-largefiles.conf
+install -o root -g clamav -m 640 ./conf/clamd-deepscan.conf /etc/clamav/clamd-deepscan.conf	
+install -o root -g clamav -m 640 ./conf/targets_root.txt /etc/clamav/targets_root.txt	
+
+printf "%s\n" "Config files copied /etc"

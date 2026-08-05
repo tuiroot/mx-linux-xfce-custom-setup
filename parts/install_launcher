@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+launcher(){
+	local name="$1"
+	local launch="$2"
+	local icon="$3"
+	local dst="$4"
+
+	cat > "$dst" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=$name
+Comment=Start $name
+Exec=$launch
+Icon=$icon
+Path=
+Terminal=false
+StartupNotify=false
+EOF
+}
+
+launcher_checksum(){
+	  local src="$1"
+	  gio set -t string "$src" metadata::xfce-exe-checksum \
+	 "$( sha256sum "$src" | awk '{print $1}')"
+ }
+
+#----------------------------------------------------------------------#
+
+elements_name=(
+"$(basename "$( xdg-user-dir PICTURES )" )"
+"$(basename "$( xdg-user-dir MUSIC )" )" 
+"$(basename "$( xdg-user-dir VIDEOS )" )"
+"$(basename "$( xdg-user-dir DOWNLOAD )" )"
+"Development" 
+"$(basename "$( xdg-user-dir DOCUMENTS )" )"
+)
+elements_exec=( 
+"open_xdgpictures"
+"open_xdgmusic"
+"open_xdgvideos"
+"open_xdgdownloads"
+"open_development"
+"open_xdgdocuments"
+)
+elements_icon=(
+"folder-cyan-music-open"
+"folder-cyan-pictures-open"
+"folder-cyan-videos-open"
+"folder-deeporange-download-open"
+"folder-violet-development"
+"folder-violet-documents"
+)
+
+userid="${1000}"
+username="$( grep "$userid" /etc/passwd  )"
+username="${username%%:*}"
+
+desktop="$( basename "$(xdg-user-dir DESKTOP)" )"
+dst_skel="/etc/skel/$desktop"
+dst_user="/home/$username/$desktop"
+
+if ! [[ -e "$dst_skel" ]]; then
+	install -d "$dst_skel"
+fi
+
+for (( i=0; i < ${#elements_name[@]}; i++ )); do
+	 name="${elements_name[$i]}"
+	 launch="${elements_exec[$i]}"
+	 icon="${elements_icon[$i]}"
+	 dst_skel="${dst_skel}/${name}.desktop"
+	 dst_user="${dst_skel}/${name}.desktop"
+	
+	launcher "$name" "$launch" \
+	"$icon" "$dst_skel" || exit 1
+	
+	launcher "$name" "$launch" \
+	"$icon" "$dst_user" || exit 1
+	#launcher_checksum "$dst"
+	
+	chmod +x "$dst_skel"
+	chmod +x "$dst_user"
+	
+done
+
+printf "%s\n" "Launcher for media and documents created"
