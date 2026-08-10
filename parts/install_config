@@ -6,8 +6,8 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-install -o root -g clamav -m 640 ./conf/clamd-largefiles.conf /etc/clamav/clamd-largefiles.conf
-install -o root -g clamav -m 640 ./conf/clamd-deepscan.conf /etc/clamav/clamd-deepscan.conf	
-install -o root -g clamav -m 640 ./conf/targets_root.txt /etc/clamav/targets_root.txt	
+install -o root -g clamav -m 640 ./parts/conf/clamd-largefiles.conf /etc/clamav/clamd-largefiles.conf
+install -o root -g clamav -m 640 ./parts/conf/clamd-deepscan.conf /etc/clamav/clamd-deepscan.conf	
+install -o root -g clamav -m 640 ./parts/conf/targets_root.txt /etc/clamav/targets_root.txt	
 
 printf "%s\n" "Config files copied /etc"

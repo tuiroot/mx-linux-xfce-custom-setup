@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 VERSION="Version: 2026-08-03"
 
-if [[ $EUID -ne 1000 ]]; then
+if [[ $EUID -ne 0 ]]; then
     printf "%s\n" "This script must be run as root.."
     exit 1
 fi
@@ -114,7 +114,7 @@ install_launcher(){
 
 #start makemyapp browser app maker
 install_deskwebapps(){
-	if ! bash ./parts/MakeMyApp-0.1.0-beta.1/makemyapp; then
+	if ! bash ./parts/MakeMyApp-0.1.0-beta.1/makemyapp.sh; then
 		ErrorCounter "c"
 		OutErr "${FUNCNAME[0]} failed"
 		return 1
@@ -145,16 +145,17 @@ EOF
 
 read -rp "Press Enter to continue or strg + c to abort"
 
-install_repo
-install_extrepo
-install_admin_scripts &
-install_user_scripts &
-install_config &
-install_anachron &
-install_user_rights &
-install_chron &
-install_autostart &
-install_launcher &
-install_deskwebapps 
+#install_repo
+#install_extrepo
+#install_admin_scripts &
+#install_user_scripts &
+#install_config &
+#install_anachron &
+#install_user_rights &
+#install_chron &
+#install_autostart &
+install_launcher "/etc/skel &
+
+#install_deskwebapps 
 
 printf "\n%s\n" "Done with $( ErrorCounter "p" ) failed parts."

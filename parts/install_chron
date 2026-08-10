@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-set -e 
 
-if [[ $EUID -ne 1000 ]]; then
+if [[ $EUID -ne 0 ]]; then
     printf "%s\n" "This script must be run as root.."
     exit 1
 fi
@@ -58,13 +57,13 @@ fi
 
 
 #save current crontab
-crontab -u "$username" -l > "$TMPF"
+crontab -u "$username" -l 2>/dev/null > "$TMPF"
 
 #add new crons to saved crontab
 AddCron "@reboot chron_clamdscan"
 
 #dirman Desktop =>
-Addcron "@reboot chron_clamdscan"
+AddCron "@reboot chron_clamdscan"
 AddCron "@reboot dirman -s \"$( xdg-user-dir DESKTOP )\" -a move -t image/* -o 3 -d \"$( xdg-user-dir PICTURES )\" --date-dir"
 AddCron "@reboot dirman -s \"$( xdg-user-dir DESKTOP )\" -a move -t audio/* -o 3 -d \"$( xdg-user-dir MUSIC )\" --date-dir"
 AddCron "@reboot dirman -s \"$( xdg-user-dir DESKTOP )\" -a move -t video/* -o 3 -d \"$( xdg-user-dir VIDEOS )\"--date-dir"

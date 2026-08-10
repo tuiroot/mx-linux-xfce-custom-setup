@@ -6505,3 +6505,206 @@ File marked as executable
 [STACK ]	Out << UserExit << MenuE << init << main	In line: 336
 [MESSAGE]	MakeMyApp wird beendet...
 
+####################################################################################################
+[START]			Monday 2026-08-10 20:47:06
+[STACK ]	main	In line: 336
+[MESSAGE]	 
+
+####################################################################################################
+[INFO]			Monday 2026-08-10 20:47:06
+[STACK ]	GetSysLang << SetLanguage << main	In line: 336
+[MESSAGE]	System language: en
+
+[INFO]			Monday 2026-08-10 20:47:06
+[STACK ]	SetLanguage << main	In line: 336
+[MESSAGE]	Set language: en
+
+[END]			Monday 2026-08-10 20:47:06
+[STACK ]	main	In line: 336
+[MESSAGE]	 
+
+[DEFAULT]			Monday 2026-08-10 20:47:06
+[STACK ]	LoadOrFallback << init << main	In line: 336
+[MESSAGE]	main:/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf; fallback:/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf
+
+[INFO]			Monday 2026-08-10 20:47:06
+[STACK ]	load_config << LoadOrFallback << init << main	In line: 336
+[MESSAGE]	/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf
+
+[INFO]			Monday 2026-08-10 20:47:06
+[STACK ]	load_config << LoadOrFallback << init << main	In line: 336
+[MESSAGE]	
+0	TXT_MISSING_LW			LibreWolf was not found on the system. Please install LibreWolf first}
+0	TXT_MISSING_FF			Firefox was not found on the system. Please install Firefox first}
+0	TXT_MENU_HEADER			--- MakeMyApp ---}
+0	TXT_MENU_CONTINUE			Continue}
+0	TXT_MENU_QUIT			Quit MakeMyApp}
+0	TXT_MENU_EXIT			MakeMyApp is exiting}
+0	TXT_MENU_NEWCHOICE			New selection}
+0	TXT_MENU_INVALIDCHOICE			Invalid input}
+0	TXT_MENU_A_INTRO			MakeMyApp creates desktop apps for popular web applications based on your browser. No Electron overhead or built-in tracking.}
+0	TXT_MENU_A_RECOMMENDATION			For maximum privacy, installation with LibreWolf is recommended}
+0	TXT_MENU_A_QUESTION			Which browser do you want to use to create your desktop apps?}
+0	TXT_MENU_B_BROWSER1			You selected}
+0	TXT_MENU_B_BROWSER2			as your browser. With this browser}
+
+[INFO]			Monday 2026-08-10 20:47:10
+[STACK ]	OutH1 << MenuHeader << init << main	In line: 336
+[MESSAGE]	by install.sh@proton.me
+
+[INFO]			Monday 2026-08-10 20:47:11
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	
+
+
+[INFO]			Monday 2026-08-10 20:47:11
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	MakeMyApp creates desktop apps for popular web applications based on your browser. No Electron overhead or built-in tracking.
+
+[INFO]			Monday 2026-08-10 20:47:11
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	
+
+[INFO]			Monday 2026-08-10 20:47:11
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	
+
+[INFO]			Monday 2026-08-10 20:47:11
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	Which browser do you want to use to create your desktop apps?
+
+[INFO]			Monday 2026-08-10 20:47:11
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	
+
+[INFO]			Monday 2026-08-10 20:47:11
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	[38;5;201m[l][0m Librewolf 				 [38;5;201m[q][0m Quit MakeMyApp
+
+[INFO]			Monday 2026-08-10 20:47:11
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	[38;5;201m[f][0m Firefox
+
+####################################################################################################
+[START]			Monday 2026-08-10 20:47:30
+[STACK ]	main	In line: 336
+[MESSAGE]	 
+
+####################################################################################################
+[INFO]			Monday 2026-08-10 20:47:30
+[STACK ]	GetSysLang << SetLanguage << main	In line: 336
+[MESSAGE]	System language: en
+
+[INFO]			Monday 2026-08-10 20:47:30
+[STACK ]	SetLanguage << main	In line: 336
+[MESSAGE]	Set language: en
+
+[END]			Monday 2026-08-10 20:47:30
+[STACK ]	main	In line: 336
+[MESSAGE]	 
+
+[DEFAULT]			Monday 2026-08-10 20:47:30
+[STACK ]	LoadOrFallback << init << main	In line: 336
+[MESSAGE]	main:/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf; fallback:/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf
+
+[INFO]			Monday 2026-08-10 20:47:30
+[STACK ]	load_config << LoadOrFallback << init << main	In line: 336
+[MESSAGE]	/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf
+
+[INFO]			Monday 2026-08-10 20:47:30
+[STACK ]	load_config << LoadOrFallback << init << main	In line: 336
+[MESSAGE]	
+0	TXT_MISSING_LW			LibreWolf was not found on the system. Please install LibreWolf first}
+0	TXT_MISSING_FF			Firefox was not found on the system. Please install Firefox first}
+0	TXT_MENU_HEADER			--- MakeMyApp ---}
+0	TXT_MENU_CONTINUE			Continue}
+0	TXT_MENU_QUIT			Quit MakeMyApp}
+0	TXT_MENU_EXIT			MakeMyApp is exiting}
+0	TXT_MENU_NEWCHOICE			New selection}
+0	TXT_MENU_INVALIDCHOICE			Invalid input}
+0	TXT_MENU_A_INTRO			MakeMyApp creates desktop apps for popular web applications based on your browser. No Electron overhead or built-in tracking.}
+0	TXT_MENU_A_RECOMMENDATION			For maximum privacy, installation with LibreWolf is recommended}
+0	TXT_MENU_A_QUESTION			Which browser do you want to use to create your desktop apps?}
+0	TXT_MENU_B_BROWSER1			You selected}
+0	TXT_MENU_B_BROWSER2			as your browser. With this browser}
+
+[INFO]			Monday 2026-08-10 20:47:34
+[STACK ]	OutH1 << MenuHeader << init << main	In line: 336
+[MESSAGE]	by install.sh@proton.me
+
+[INFO]			Monday 2026-08-10 20:47:35
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	
+
+
+[INFO]			Monday 2026-08-10 20:47:35
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	MakeMyApp creates desktop apps for popular web applications based on your browser. No Electron overhead or built-in tracking.
+
+[INFO]			Monday 2026-08-10 20:47:35
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	
+
+[INFO]			Monday 2026-08-10 20:47:35
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	
+
+[INFO]			Monday 2026-08-10 20:47:35
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	Which browser do you want to use to create your desktop apps?
+
+[INFO]			Monday 2026-08-10 20:47:35
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	
+
+[INFO]			Monday 2026-08-10 20:47:35
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	[38;5;201m[l][0m Librewolf 				 [38;5;201m[q][0m Quit MakeMyApp
+
+[INFO]			Monday 2026-08-10 20:47:35
+[STACK ]	Out << DisplayMenuA << MenuChooseBrowser << init << main	In line: 336
+[MESSAGE]	[38;5;201m[f][0m Firefox
+
+####################################################################################################
+[START]			Monday 2026-08-10 20:57:04
+[STACK ]	main	In line: 336
+[MESSAGE]	 
+
+####################################################################################################
+[INFO]			Monday 2026-08-10 20:57:04
+[STACK ]	GetSysLang << SetLanguage << main	In line: 336
+[MESSAGE]	System language: en
+
+[INFO]			Monday 2026-08-10 20:57:04
+[STACK ]	SetLanguage << main	In line: 336
+[MESSAGE]	Set language: en
+
+[END]			Monday 2026-08-10 20:57:04
+[STACK ]	main	In line: 336
+[MESSAGE]	 
+
+[DEFAULT]			Monday 2026-08-10 20:57:04
+[STACK ]	LoadOrFallback << init << main	In line: 336
+[MESSAGE]	main:/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf; fallback:/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf
+
+[INFO]			Monday 2026-08-10 20:57:04
+[STACK ]	load_config << LoadOrFallback << init << main	In line: 336
+[MESSAGE]	/root/Desktop/custom-setup/parts/MakeMyApp-0.1.0-beta.1/data/lang/en/txt_main.conf
+
+[INFO]			Monday 2026-08-10 20:57:04
+[STACK ]	load_config << LoadOrFallback << init << main	In line: 336
+[MESSAGE]	
+0	TXT_MISSING_LW			LibreWolf was not found on the system. Please install LibreWolf first}
+0	TXT_MISSING_FF			Firefox was not found on the system. Please install Firefox first}
+0	TXT_MENU_HEADER			--- MakeMyApp ---}
+0	TXT_MENU_CONTINUE			Continue}
+0	TXT_MENU_QUIT			Quit MakeMyApp}
+0	TXT_MENU_EXIT			MakeMyApp is exiting}
+0	TXT_MENU_NEWCHOICE			New selection}
+0	TXT_MENU_INVALIDCHOICE			Invalid input}
+0	TXT_MENU_A_INTRO			MakeMyApp creates desktop apps for popular web applications based on your browser. No Electron overhead or built-in tracking.}
+0	TXT_MENU_A_RECOMMENDATION			For maximum privacy, installation with LibreWolf is recommended}
+0	TXT_MENU_A_QUESTION			Which browser do you want to use to create your desktop apps?}
+0	TXT_MENU_B_BROWSER1			You selected}
+0	TXT_MENU_B_BROWSER2			as your browser. With this browser}
+

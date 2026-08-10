@@ -5,14 +5,22 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-userid=1000
+P_user="$1"
+
+userid=${P_USER:-1000}
 username="$( grep "$userid" /etc/passwd  )"
 username="${username%%:*}"
 
 user_astart="/home/$username/.config/autostart"
 [[ -d "$user_astart" ]] || install -d "$user_astart"
-cp ./parts/autostart/* "$user_astart"
 
 skel_astart="/etc/skel/autostart/"
 [[ -d "$skel_astart" ]] || install -d "$skel_astart"
-cp ./parts/autostart/* "$skel_astart"
+
+mapfile -t launcher < <( find ./autostart/ -mindepth 1 -maxdepth 1 )
+
+for element in launcher; do
+cp "$launcher" "$user_astart"
+cp "$launcher" "$skel_astart"
+done
+

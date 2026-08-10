@@ -52,14 +52,15 @@ elements_icon=(
 "folder-violet-development"
 "folder-violet-documents"
 )
+P_USER="$1"
 
-userid="${1000}"
+userid=${P_USER:-1000}
 username="$( grep "$userid" /etc/passwd  )"
 username="${username%%:*}"
 
 desktop="$( basename "$(xdg-user-dir DESKTOP)" )"
-dst_skel="/etc/skel/$desktop"
-dst_user="/home/$username/$desktop"
+dst_skel="/etc/skel/"
+dst_user="/home/$username/"
 
 if ! [[ -e "$dst_skel" ]]; then
 	install -d "$dst_skel"
@@ -69,14 +70,13 @@ for (( i=0; i < ${#elements_name[@]}; i++ )); do
 	 name="${elements_name[$i]}"
 	 launch="${elements_exec[$i]}"
 	 icon="${elements_icon[$i]}"
-	 dst_skel="${dst_skel}/${name}.desktop"
-	 dst_user="${dst_skel}/${name}.desktop"
 	
 	launcher "$name" "$launch" \
-	"$icon" "$dst_skel" || exit 1
+	"$icon" "${dst_skel}/${name}.desktop" || exit 1
 	
 	launcher "$name" "$launch" \
-	"$icon" "$dst_user" || exit 1
+	"$icon" "${dst_user}/${name}.desktop}" || exit 1
+	
 	#launcher_checksum "$dst"
 	
 	chmod +x "$dst_skel"

@@ -7,47 +7,60 @@ fi
 
 
 repro=(
-"clamav"						#security
-"clamav-daemon"					#security
-"clamav-freshclam"				#security
-"clamdscan"						#security
-"clamfs"						#security
-"debsums"						#security
+"clamav"
+"clamav-daemon"
+"clamav-freshclam"
+"clamdscan"
+"clamfs"
+"debsums"
 "extrepo"
-"ffmpeg"						#media
+"fonts-noto-color-emoji"
+"gimp"
 "glow"
-"hunspell-de-de"				#office
-"keepassxc"						#security
-"libosinfo-bin"					#virt
-"libreoffice-l10n-de"			#office
-"libvirt-daemon-system"			#virt
-"mat2"							#media
-"mythes-de"						#office
-"needrestart"					#security
-"nethogs"						#network/security
-"net-tools"						#network
-"nheko"							#com
-"osinfo-db-tools"				#virt
-"ovmf"							#virt
-"qemu-system"					#virt
-"qemu-system-gui" 				#virt
-"qemu-system-modules-spice" 	#virt
-"qemu-utils"					#virt
-"quickjs"    					#dependency yt-dlp
-"swtpm"							#virt
-"spice-client-gtk"				#virt
-"shellcheck"					#development
-"virt-manager"					#virt
-"virt-viewer"					#virt
-"virtinst"						#virt
-"gir1.2-spiceclientgtk-3.0 "	#virt
-"yt-dlp"						#media
+"gomuks"
+"hunspell-de-de"
+"keepassxc"
+"libosinfo-bin"
+"libreoffice-l10n-de"
+"libvirt-daemon-system"
+"mat2"
+"mythes-de"
+"needrestart"
+"net-tools"
+"nethogs"
+"nheko"
+"nmap"
+"osinfo-db-tools"
+"ovmf"
+"proton-vpn-cli"
+"protonvpn-stable-release"
+"qemu-system"
+"qemu-system-gui"
+"qemu-system-modules-spice"
+"qemu-utils"
+"qrencode"
+"quickjs"
+"shellcheck"
+"spice-client-gtk"
+"swtpm"
+"sysstat"
+"ventoy-bin"
+"virt-manager"
+"virt-viewer"
+"virtinst"
+"wireshark"
+"yt-dlp"
+"zbar-tools"
 )
 
-if command -v nala > /dev/null; then
-	nala install "${repro[@]}" || exit 1
+if ! command -v nala > /dev/null; then
+	nala update
+	nala upgrade
+	nala install "${repro[@]}"
 elif command -v apt > /dev/null; then
-	apt install "${repro[@]}" || exit 1
+	apt update
+	apt install
+	apt install "${repro[@]}"
 else
 	exit 1
 fi

@@ -10,7 +10,7 @@ CheckScript(){
 	local userinput
 	
 	if  bash -n "$script" > /dev/null; then
-		AskUserToInstallGarbage "script"
+		AskUserToInstallGarbage "$script"
 	elif shellcheck "$script" > /dev/null; then
 		AskUserToInstallGarbage "$script"
 	fi
@@ -18,9 +18,9 @@ CheckScript(){
 
 AskUserToInstallGarbage(){
 	local script="$1"
-	cat << 'EOF'
+	cat << EOF
 	####################################################################
-	Script check for $script failed.
+	Shellcheck for $script failed.
 	Enter: "I DONT CARE" -- to install garbage --
 	####################################################################
 
@@ -33,9 +33,15 @@ EOF
 	
 #----------------------------------------------------------------------#
 
-mapfile -t scripts < <( find ./adminscripts/ -mindepth 1 -maxdepth 1 )
+mapfile -t scripts < <( find ./scripts_root/ -mindepth 1 -maxdepth 1 )
 
 for element in "${scripts[@]}"; do
+	echo "$element"
+done
+
+sleep 1
+for element in "${scripts[@]}"; do
+	echo "1. $element"
 	CheckScript "$element" || continue
 	
 	filename="$( basename "$element")"
@@ -43,7 +49,7 @@ for element in "${scripts[@]}"; do
 
 done 
 
-printf "%s\n" "Admin scripts copied to /usr/local/bin"
+printf "%s\n" "Root scripts copied to /usr/local/bin"
 
 
 

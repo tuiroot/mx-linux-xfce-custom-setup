@@ -37,13 +37,13 @@ ParseCommandLineOptions(){
 
 #---------------Target user -------------------------------------------#
 
-ParseCommandLineOptions
+ParseCommandLineOptions "$@"
 
 if [[ "$P_uname" =~ ^[a-zA-Z\ ]+$ ]]; then
 	username="$P_uname"
 elif [[ "$P_uid" =~ ^[0-9]+$ ]]; then
 	userid="$P_uid"
-	username="$( grep "$P_uid" /etc/passwd  )"
+	username="$( grep "$userid" /etc/passwd  )"
 	username="${username%%:*}"
 else
 	Help

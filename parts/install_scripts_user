@@ -10,16 +10,16 @@ CheckScript(){
 	local script="$1"
 	local userinput
 	
-	if  bash -n "$script" > /dev/null; then
-		AskUserToInstallGarbage "script"
-	elif shellcheck "$script" > /dev/null; then
+	if ! bash -n "$script" > /dev/null; then
+		AskUserToInstallGarbage "$script"
+	elif ! shellcheck "$script"; then
 		AskUserToInstallGarbage "$script"
 	fi
 }
 
 AskUserToInstallGarbage(){
 	local script="$1"
-	cat << 'EOF'
+	cat << EOF
 	####################################################################
 	Script check for $script failed.
 	Enter: "I DONT CARE" -- to install garbage --
@@ -35,7 +35,7 @@ EOF
 #----------------------------------------------------------------------#
 
 
-mapfile -t scripts < <( find ./scripts/ -mindepth 1 -maxdepth 1 )
+mapfile -t scripts < <( find ./parts/scripts_user/ -mindepth 1 -maxdepth 1 )
 
 for element in "${scripts[@]}"; do
 	CheckScript "$element" || continue
