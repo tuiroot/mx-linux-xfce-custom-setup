@@ -5,31 +5,51 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+UpdateRepo(){
+	if command -v nala > /dev/null; then
+		nala update && nala upgrade
+	elif command -v apt > /dev/null ; then
+		apt update && apt upgrade
+	else
+		exit 1
+	fi
+}
 
-#--------------- ProtonVpn --------------------------------------------#
 
-wget https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.8_all.deb
-dpkg -i ./protonvpn-stable-release_1.0.8_all.deb && nala update
-nala install proton-vpn-gnome-desktop
+InstallApp(){
+	local apps=("$@")
+	if command -v nala > /dev/null; then
+		nala install "${apps[@]}"
+	elif command -v apt > /dev/null; then
+		apt install "${apps[@]}"
+	else
+		exit 1
+	fi
+}
 
-#----------------------------------------------------------------------#
+InstallProtonVPN(){
+	wget https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.8_all.deb
+	dpkg -i ./protonvpn-stable-release_1.0.8_all.deb && UpdateRepo
+	InstallApp proton-vpn-cli
+}
 
-#--------------- LibreWolf --------------------------------------------#
-if command -v nala; then
-	nala update && nala install extrepo -y
+InstallLibreWolf(){
+	InstallApp extrepo -y
 	extrepo enable librewolf && extrepo update librewolf
-	nala update && nala install librewolf -y
-elif command -v apt; then
-	apt update && nala install extrepo -y
-	extrepo enable librewolf && extrepo update librewolf
-	apt update && nala install librewolf -y
-else
-	exit 1
-fi
-
-#----------------------------------------------------------------------#
+	UpdateRepo && InstallApp librewolf -y
+}
 
 
-	
-printf "%s\n" "Installation from external repros completed"
+main(){
+	local c=0
+	InstallProtonVPN || (( c++ ))
+	InstallLibreWolf || (( c++ ))
+	if (( c == 0 )); then
+		printf "%s\n" "Installation from external repos complete"
+	else
+		exit 1
+	fi
+}
+
+main
 

@@ -56,11 +56,11 @@ repro=(
 if ! command -v nala > /dev/null; then
 	nala update
 	nala upgrade
-	nala install "${repro[@]}"
+	nala install "${repro[@]}" -y
 elif command -v apt > /dev/null; then
 	apt update
-	apt install
-	apt install "${repro[@]}"
+	apt upgrade
+	apt install "${repro[@]}" -y
 else
 	exit 1
 fi
