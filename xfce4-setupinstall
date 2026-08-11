@@ -154,7 +154,7 @@ read -rp "Press Enter to continue or strg + c to abort"
 #install_user_rights &
 #install_chron &
 #install_autostart &
-install_launcher "/etc/skel &
+install_launcher "/etc/skel" &
 
 #install_deskwebapps 
 

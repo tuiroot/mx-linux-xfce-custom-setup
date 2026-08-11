@@ -131,7 +131,9 @@ AskUserKeepSelection(){
 	DebugLog "\$@ selected: ${selected[*]}"
 	Out ""
 	Out "$TXT_USER_ASK"
-	Out "${SIG}${selected[@]}${NC}"
+	for element in "${selected[@]}"; do
+		Out "${SIG}$element${NC}"
+	done
 	#OutListTwoColumns "${selected[@]}"
 	Out "\n"
 	Out ""
@@ -176,7 +178,7 @@ UserInputMultiSelect() {
 		else
 			AskUserKeepSelection "${selected[@]}"
 			decision="$( UserInputYNQ )"
-			DebugLog "Selected ${selected[@]}" "${LINENO[@]}" 
+			DebugLog "${selected[@]}" "${LINENO[@]}" 
 			case $decision in
 			y|ye|yes)
 				printf "%s\n" "${selected[@]}"

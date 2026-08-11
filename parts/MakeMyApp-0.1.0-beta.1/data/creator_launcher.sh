@@ -88,7 +88,7 @@ convert_filename(){
 
 create_launcher(){
 	
-	IsItDir "$DST_LAUNCHER" || install -d ${DST_LAUNCHER} 2>> "$ERR_LOG"
+	IsItDir "$DST_LAUNCHER" || install -d "${DST_LAUNCHER}" 2>> "$ERR_LOG"
 	IsItWrite "$DST_LAUNCHER" || return 1
 	local filename="$PAR_launcher_profilename"
 	local launcher_path="${DST_LAUNCHER}/${filename}.desktop"
@@ -134,12 +134,13 @@ set_checksum_xfce(){
 
 val_checksum_xfce(){
 	local launcher="$1" 
+	local checksum
 	DebugLog "\$1 launcher: $launcher"
 	
 	IsItRead "$launcher"
-	local checksum="$( { gio info -a "metadata::xfce-exe-checksum" "$launcher" \
+	checksum="$( { gio info -a "metadata::xfce-exe-checksum" "$launcher" \
 	| grep metadata::xfce-exe-checksum: \
-	| awk '{print $2}'; } 2>>$ERR_LOG )"
+	| awk '{print $2}'; } 2>> "$ERR_LOG" )"
 	if [[ -n "$checksum" ]]; then
 		OutOk_i "$TXT_CHECKSUMVAL_OK" "lst"
 		return 0
@@ -172,7 +173,7 @@ init(){
 		load_config "${BASE_DIR}/lang/${PAR_lang}/txt_create_launcher.conf"
 		
 		Out " "
-		Out_i "$TXT_CREATE_LAUNCHER $HIGHLIGHT$launcher_name$NC"
+		Out_i "$TXT_CREATE_LAUNCHER $HIGHLIGHT$PAR_launcher_name$NC"
 		path_launcher="$(create_launcher)"
 		
 		sleep 0.25
@@ -190,12 +191,12 @@ init(){
 
 ########################################################################
 param_err=()
-[[ -z "$PAR_lang" ]] && param_err+="LANG "
-[[ -z "$PAR_browser" ]] && param_err+="BROWSER "
-[[ -z "$PAR_launcher_profilename" ]] && param_err+="PROFILNAME "
-[[ -z "$PAR_launcher_name" ]] && param_err+="NAME "
-[[ -z "$PAR_launcher_icon" ]] && param_err+="ICON "
-[[ -z "$PAR_launcher_url" ]] && param_err+="URL"
+[[ -z "$PAR_lang" ]] && param_err+=("LANG")
+[[ -z "$PAR_browser" ]] && param_err+=("BROWSER")
+[[ -z "$PAR_launcher_profilename" ]] && param_err+=("PROFILNAME")
+[[ -z "$PAR_launcher_name" ]] && param_err+=("NAME")
+[[ -z "$PAR_launcher_icon" ]] && param_err+=("ICON")
+[[ -z "$PAR_launcher_url" ]] && param_err+=("URL")
 
 if (( ${#param_err[@]} > 0 )); then
 	OutErr_i "$TXT_PARAM_ERR ${param_err[*]}"

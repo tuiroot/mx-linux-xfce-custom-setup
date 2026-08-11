@@ -125,7 +125,7 @@ ReadAndValidatePackageConf() {
 	codescore=0
     while IFS= read -r line || [[ -n "$line" ]]; do
         #check line for code
-		codescore=$(( $code_score + $(CodeScore "$line") ))
+		codescore=$(( codescore + $(CodeScore "$line") ))
 		(( codescore < 2 )) || return 1
 		
         # skip comments and empty lines
@@ -167,7 +167,6 @@ ReadAndValidatePackageConf() {
 IsConfIn(){
 	local package_root="$1"
 	local config="$package_root/makemyapp.conf"
-	local mime
 	DebugLog "package_root: $package_root" "INFO"
 	
 	if ! IsItFile "$config"; then
@@ -271,7 +270,7 @@ IsPackageComplete(){
 	local package="$1" #path
 	
 	packagename="$( basename "$package" )"
-	DebugLog "tmpd: $tmpd; packagename: $( basename $packagename )" "INFO"  "$LINENO"
+	DebugLog "tmpd: $tmpd; packagename: $( basename "$packagename" )" "INFO"  "$LINENO"
 	
 	IsConfIn "$package" || STATE="ERROR"
 	# IsUserjsIn "$package"  || STATE="ERROR"
@@ -287,33 +286,6 @@ IsPackageComplete(){
 	fi
 }
 
-CodeScore(){
-	local text="$1"
-	local score=0
-	local regex
-
-	#Control flow / language constructs
-	regex='(^|[^[:alnum:]_])(if|else|elif|elseif|for|foreach|while|do|switch|case|match|try|catch|return|function|class)([^[:alnum:]_]|$)'
-	[[ "$text" =~ $regex ]] && ((score++))
-
-	#Typical brackets
-	regex='[{}()]'
-	[[ "$text" =~ $regex ]] && ((score++))
-
-	#Typical operators
-	regex='(==|!=|=>|<=|>=|:=|\+\+|--)'
-	[[ "$text" =~ $regex ]] && ((score++))
-
-	#Semikolon
-	regex=';'
-	[[ "$text" =~ $regex ]] && ((score++))
-
-	printf '%d' "$score"
-}
-
-
-
-
 #----------------------------------------------------------------------#
 ListPackageDir(){
 	local tmpd="$1"
@@ -328,7 +300,7 @@ ExtractTarToTmp(){
 	
 	DebugLog "package: $package; dsc: $dsc" "INFO"  "$LINENO"
 	
-	if ! tar -xf "$package" -C "$tmpd" 2>> $ERR_LOG; then
+	if ! tar -xf "$package" -C "$tmpd" 2>> "$ERR_LOG"; then
 		OutErr "$TXT_FAILED_XTRACTION1 $tmpd $TXT_FAILED_XTRACTION2"
 		STATE="ERR"
 		return 1
@@ -358,7 +330,7 @@ init(){
 	LoadOrFallback "$TEXT_SOURCE" "$TEXT_DEFAULT"
 	
 	DebugLog "$SCRIPT_NAME" "START"
-	tmpd="$(mktemp -d 2>> $ERR_LOG )" || return 1
+	tmpd="$(mktemp -d 2>> "$ERR_LOG" )" || return 1
 	IsTempReady "$tmpd" || return 1
 	
 	ExtractTarToTmp "$PAR_package" "$tmpd" || return 1

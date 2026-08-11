@@ -34,7 +34,8 @@ GetSysLang(){
 }
 
 SetLanguage() {
-	local lang="$(GetSysLang)"
+	local lang
+	lang="$(GetSysLang)"
 	if [[ "$(locale charmap 2>/dev/null)" == "UTF-8" ]]; then
 		case "$lang" in
 			de*) lang="de" ;;
@@ -71,8 +72,8 @@ SetLanguage() {
 
 ############### MAIN ###################################################
 
-DebugLog " " "START"
+DebugLog " $SCRIPT_NAME" "START"
 SetLanguage
-DebugLog " " "END"
+DebugLog " $SCRIPT_NAME" "END"
 
 exit 0

@@ -85,7 +85,7 @@ SLEEPTIME_FALLBACK=${SLEEPTIME_FALLBACK:-$DEF_SLEEPTIME_FALLBACK}
 UserExit(){
 	Out ""
 	Out "MakeMyApp wird beendet..."
-	sleep $SLEEPTIME_EXIT
+	sleep "$SLEEPTIME_EXIT"
 	exit 0
 }
 
@@ -229,7 +229,7 @@ CreateBrowserProfile(){
 	DebugLog "\$1 profile: $profile" "INFO"  
 	
 	"$browser" -CreateProfile "$profile" 2>> "$ERR_LOG"
-	sleep $SLEEPTIME_PROFILE_CREATED 
+	sleep "$SLEEPTIME_PROFILE_CREATED" 
 	
 	#check success
 	path_profile="$(find "$browser_dir" -name "*.${profile}" 2>> "$ERR_LOG")"
@@ -423,7 +423,6 @@ MenuE(){
 
 init(){
 	local lang="$1"
-	DebugLog "$SCRIPT_NAME" "START" 
 	
 	#load text  
 	TEXT_SOURCE="${BASE_DIR}/lang/$lang/txt_install.conf"
@@ -619,6 +618,8 @@ done
 	MenuE
 
 done
+
+
 #-----------------------------------------------------------------------#End main loop
 }
 
@@ -626,9 +627,9 @@ done
 #------------------------------------------------------------------------#init
 
 #parameters/globals
+DebugLog "$SCRIPT_NAME" "START" 
 lang="${PAR_lang:-$DEF_LANG}" #fallback
 browser="${PAR_browser:-$DEF_BROWSER}"
-
 
 if [[ "$browser" == "librewolf" ]]; then
 	BROWSER_DIR="$BROWSER_DIR_LW"
@@ -637,3 +638,5 @@ elif [[ "$browser" == "firefox" ]]; then
 fi
 
 init "$lang"
+DebugLog " $SCRIPT_NAME" "END"
+
