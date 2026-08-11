@@ -578,7 +578,7 @@ for element in "${Choice[@]}"; do
 	#--------------------------------------------------------------------Prepare launcher icon
 	
 	source="$tmpd_package/logo.svg"
-	target="/usr/share/icons/$ICON.svg"
+	target="${xdg-user-dir}/.local/share/icons/$ICON.svg"
 	
 	if ! MoveFile "$source" "$target"; then
 		STATE="WARN"
